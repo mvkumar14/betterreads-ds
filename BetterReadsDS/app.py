@@ -5,6 +5,7 @@ import json
 # Third Party Modules
 import requests
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 # from decouple import config #<-- not sure what this does yet
 
 # Custom Modules
@@ -15,7 +16,7 @@ from google_books_hf import process_list
 
 def create_app():
     app = Flask(__name__)
-
+    CORS(app,supports_credentials=True)
     # Whenever we output a list of books the json format of the
     # list should be the same. Lets call this format
     # OUT_LIST format for now. This format is what the Web team is
