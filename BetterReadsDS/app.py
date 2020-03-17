@@ -9,7 +9,7 @@ from flask_cors import CORS
 # from decouple import config #<-- not sure what this does yet
 
 # Custom Modules
-from google_books_hf import process_list
+from .google_books_hf import process_list
 
 # Retreive Google API key from environment
 
@@ -43,7 +43,8 @@ def create_app():
         relevant_details=['id','title','authors','publisher',
                   'publishedDate','description','industryIdentifiers',
                   'pageCount','categories','thumbnail','smallThumbnail',
-                  'language','webReaderLink','textSnippet','isEbook']
+                  'language','webReaderLink','textSnippet','isEbook',
+                  'averageRating']
 
         # Retreive the information from the POST request body
 
@@ -105,7 +106,11 @@ def create_app():
     # the different types of recommendations we need to provide.
     # output is a list of books.
     def recommendations():
-        return render_template('base.html',page_name='recommendations')
+        cwd = os.getcwd()
+        print(cwd)
+        with open('hardcode_reccs.json','r',encoding='utf8') as f :
+            output = json.load(f)
+        return jsonify(output)
 
 
     return app
