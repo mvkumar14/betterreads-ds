@@ -13,6 +13,16 @@ import pickle
 import requests
 import json
 
+# This is a 
+def gapi_query(query):
+    response = requests.get('https://www.googleapis.com/books/v1/volumes?q='
+                 + query
+                 + '&key='
+                 + GOOGLE_KEY)
+    result_dict = json.loads(response.text)
+    return result_dict['items']
+
+
 # This is a general function. Should work on any JSON data
 def retreive_details(input_dict,keys_to_extract):
     """
