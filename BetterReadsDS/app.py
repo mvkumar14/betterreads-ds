@@ -107,7 +107,8 @@ def create_app():
     def recommendations():
         cwd = os.getcwd()
         print(cwd)
-        with open('hardcode_reccs.json','r',encoding='utf8') as f :
+        # The file should be where your pipenv pipfile is located
+        with open('hardcode_reccs.json','r',encoding='utf8') as f:
             output = json.load(f)
         return jsonify(output)
 
