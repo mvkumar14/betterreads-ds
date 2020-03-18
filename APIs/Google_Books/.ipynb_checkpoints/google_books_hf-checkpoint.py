@@ -2,6 +2,8 @@
 This module is a set of helper functions to process data from the google
 books API. The functions are as follows:
 
+gapi_query()        - Pass query parameters through this funciton
+
 retreive_details()  - Retreive specific keys from a dictionary object
 
 clean()             - Alter data to match data model
@@ -13,7 +15,8 @@ import pickle
 import requests
 import json
 
-# This is a 
+# This is a function specific to our use case. It i abstracts away the 
+# query logic.
 def gapi_query(query):
     response = requests.get('https://www.googleapis.com/books/v1/volumes?q='
                  + query

@@ -9,10 +9,20 @@ from flask_cors import CORS
 # from decouple import config #<-- not sure what this does yet
 
 # Custom Modules
-from .google_books_hf import process_list
+from .google_books_hf import process_list, gapi_query
+# NOTE  that when you deploy you have to get rid of the relative
+# references so google_books_hf instead of .google_books_hf
 
+# GLOBAL VARIABLES
 # Retreive Google API key from environment
+GOOGLE_KEY = os.environ['GOOGLE_KEY']
 
+# keys to pull from the google api response
+relevant_details=['id','title','authors','publisher',
+          'publishedDate','description','industryIdentifiers',
+          'pageCount','categories','thumbnail','smallThumbnail',
+          'language','webReaderLink','textSnippet','isEbook',
+          'averageRating']
 
 def create_app():
     app = Flask(__name__)
@@ -21,7 +31,6 @@ def create_app():
     # list should be the same. Lets call this format
     # OUT_LIST format for now. This format is what the Web team is
     # currently using to render book list results.
-
 
     @app.route('/')
     # some details about the api and some references
@@ -39,12 +48,7 @@ def create_app():
     @app.route('/search', methods=['GET','POST'])
     def search():
         # variables used throughout the function
-        GOOGLE_KEY = os.environ['GOOGLE_KEY']
-        relevant_details=['id','title','authors','publisher',
-                  'publishedDate','description','industryIdentifiers',
-                  'pageCount','categories','thumbnail','smallThumbnail',
-                  'language','webReaderLink','textSnippet','isEbook',
-                  'averageRating']
+
 
         # Retreive the information from the POST request body
 
@@ -91,12 +95,16 @@ def create_app():
 
         return render_template('echo.html',page_name='search')
 
-    @app.route('/subject_list')
+    @app.route('/subject_list', methods=['POST'])
     # input will be subject heading (this should be a valid value)
     # We need to give BE/FE a list of valid subject headings
     # output is going to be a list of books in the OUT_LIST format
     def subjects():
-        return render_template('base.html',page_name='subjects')
+        subject = request.get_json(force=True)
+        my_query = 'subject:' + subject['subjects']
+        results  = gapi_query(my_query)
+        output = process_list(results,relevant_details)
+        return jsonify(output)
 
 
     @app.route('/recommendations')
@@ -106,11 +114,7 @@ def create_app():
     # the different types of recommendations we need to provide.
     # output is a list of books.
     def recommendations():
-        cwd = os.getcwd()
-        print(cwd)
-        with open('hardcode_reccs.json','r',encoding='utf8') as f :
-            output = json.load(f)
-        return jsonify(output)
+        return render_template('echo.html',page_name='recommendations')
 
 
     return app
