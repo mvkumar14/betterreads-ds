@@ -1,11 +1,16 @@
 # Inbuild Modules
 import os
 import json
+import pickle
 
 # Third Party Modules
 import requests
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
+# import numpy as np
+# import pandas as pd
+from sklearn.neighbors import NearestNeighbors
+# from scipy.sparse import csr_matrix
 # from decouple import config #<-- not sure what this does yet
 
 # Custom Modules
@@ -13,6 +18,22 @@ from .google_books_hf import process_list
 
 # Retreive Google API key from environment
 
+# Loading in model
+with open('test.obj','rb') as f:
+    knn_deserial = pickle.load(f)
+with open('user_matrix.obj','rb') as f:
+    user_matrix = pickle.load(f)
+
+print(type(user_matrix))
+
+# Defining function to return model values
+def get_recommendations(book_title, matrix=user_matrix, model=knn_deserial, topn=10):
+    book_index = list(matrix.index).index(book_title)
+    distances, indices = model.kneighbors(matrix.iloc[book_index,:].values.reshape(1,-1), n_neighbors=topn+1)
+    print('Recommendations for {}:'.format(matrix.index[book_index]))
+    output_list = []
+    for i in range(1, len(distances.flatten())):
+        output_list.append('{}. {}, distance = {}'.format(i, matrix.index[indices.flatten()[i]], "%.3f"%distances.flatten()[i]))
 
 def create_app():
     app = Flask(__name__)
@@ -98,19 +119,27 @@ def create_app():
         return render_template('base.html',page_name='subjects')
 
 
-    @app.route('/recommendations')
-    # input is ???
-    # The input might include parameters that aid in the model
-    # selection process. We may have different models depending on
-    # the different types of recommendations we need to provide.
-    # output is a list of books.
+    @app.route('/recommendations',methods = ['POST'])
+    # Input is possibly a user id
+    # we need to access and search the user's data for a book that they might
+    # want recommendations for
+    # Change the model to return isbns instead of book titles
+    # Take list of isbns and search GAPI for Books
+    # Return values in proper output format
     def recommendations():
-        cwd = os.getcwd()
-        print(cwd)
-        # The file should be where your pipenv pipfile is located
-        with open('hardcode_reccs.json','r',encoding='utf8') as f:
-            output = json.load(f)
-        return jsonify(output)
+        input_data = request.get_json(force=True)
+        book_title = input_data['title']
+        # if book_title in valid_titles:
+        reccs = get_recommendations(book_title)
+        out_string = " ".join(reccs)
+        return render_template('echo.html',page_name='Recommendations',
+                                echo=out_string)
+
+        # else:
+        #     # The file should be where your pipenv pipfile is located
+        #     with open('hardcode_reccs.json','r',encoding='utf8') as f:
+        #         output = json.load(f)
+        #     return jsonify(output)
 
 
     return app
