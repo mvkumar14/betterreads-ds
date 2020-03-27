@@ -52,3 +52,10 @@ Primary key: WorkID
 | OtherTitles      	| text array 	|
 | TranslatedTitles 	| text array 	|
 | WorkID           	| serial     	|
+
+
+## Important information
+
+This database is from [the OpenLibrary Data Dump.](https://openlibrary.org/developers/dumps)
+
+This database data is largely unusable for the following reason: the works and editions contain entries that are not informative / are garbage data. This is caused by bots creating duplicate 'works' and 'editions' entries in the original OpenLibrary data that have mostly null values except for small changes, such as a different publisher or description. However, there is a solution to this issue. The editions data entries contain the text array labeled 'Works' which has a link/key to the work that the edition is supposed to be associated with.
