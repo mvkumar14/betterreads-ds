@@ -8,13 +8,13 @@ import pickle
 # Third Party Modules
 import requests
 import pandas as pd
-from sklearn.neighbors import NearestNeighbors
+# from sklearn.neighbors import NearestNeighbors
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS, cross_origin
 # from decouple import config #<-- not sure what this does yet
 
 # Custom Modules
-from google_books_hf import process_list, gapi_query, isbns_to_gapi
+from google_books_hf import process_list, gapi_query
 # NOTE  that when you deploy you have to get rid of the relative
 # references so google_books_hf instead of .google_books_hf
 
@@ -32,15 +32,15 @@ relevant_details=['id','title','authors','publisher',
           'language','webReaderLink','textSnippet','isEbook',
           'averageRating']
 
-with open('user_matrix.pkl','rb') as f:
-    user_matrix = pickle.load(f)
-
 with open('book_list.pkl','rb') as f:
     books = pickle.load(f)
     ref_book_list,isbns = list(zip(*books))
 
 with open('knn_model.pkl','rb') as f:
     knn = pickle.load(f)
+	
+#with open ('user_matrix.pkl','rb') as f:
+#	user_matrix = pickle.load(f)
 
 def get_recommendations(book_title, matrix=user_matrix, model=knn, topn=10):
     book_index = list(matrix.index).index(book_title)
@@ -123,23 +123,24 @@ def recommendations():
     + userid)
     user_books = requests.get(user_data_url)
     user_books = json.loads(user_books.text)
-    if len(user_books)>1:
-        book_list = []
-        for i in user_books:
-            book_list.append(i['title'])
-        for i in book_list:
-            if i in ref_book_list:
-                reccs = get_recommendations(i)
-                reccs_gapi_format =[]
-                for i in reccs:
-                    reccs_gapi_format.append(gapi_query(i)['items'][0])
-                reccs_out_format = process_list(reccs_gapi_format,relevant_details)
-                interest = i
-                print(type(i),type(reccs_out_format),type(reccs_out_format[0]))
-                output = {'interest':i,"recommendations":reccs_out_format}
-                return jsonify(output)
+    # if len(user_books)>1:
+    #     book_list = []
+    #     for i in user_books:
+    #         book_list.append(i['title'])
+    #     for i in book_list:
+    #         if i in ref_book_list:
+    #             reccs = get_recommendations(i)
+    #             reccs_gapi_format =[]
+    #             for i in reccs:
+    #                 reccs_gapi_format.append(gapi_query(i)['items'][0])
+    #             reccs_out_format = process_list(reccs_gapi_format,relevant_details)
+    #             interest = i
+    #             print(type(i),type(reccs_out_format),type(reccs_out_format[0]))
+    #             output = {'interest':i,"recommendations":reccs_out_format}
+    #             return jsonify(output)
     with open('hardcode_reccs.json','r',encoding='utf8') as f :
-        output = json.load(f)
+        output_reccs = json.load(f)
+    output = {'interest':'hardcoded_reccs','recommendations':output_reccs}
     return jsonify(output)
 
 if __name__ == '__main__':
